@@ -20,14 +20,8 @@
     "OPENAI_API_KEY": "@openai_api_key"
   },
   "functions": {
-    "app/api/analyze/route.ts": {
+    "app/api/simple/route.ts": {
       "maxDuration": 300
-    },
-    "app/api/upload/policies/route.ts": {
-      "maxDuration": 60
-    },
-    "app/api/upload/questions/route.ts": {
-      "maxDuration": 60
     }
   }
 }
