@@ -204,7 +204,7 @@ async function handleAnalysis(request: NextRequest) {
   for (const question of questions) {
     try {
       // Combine policy content for context
-      const policyContext = policies.map((p: any) => 
+      const policyContext = policies.map((p: { name: string; content: string }) => 
         `[Document: ${p.name}]\n${p.content}`
       ).join('\n\n').substring(0, 8000); // Limit context size
 
@@ -239,7 +239,7 @@ Guidelines:
         const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
         const jsonStr = jsonMatch ? jsonMatch[0] : aiResponse;
         analysisResult = JSON.parse(jsonStr);
-      } catch (parseError) {
+      } catch {
         // Fallback if JSON parsing fails
         analysisResult = {
           status: 'Maybe',

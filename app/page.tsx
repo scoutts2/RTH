@@ -125,7 +125,7 @@ export default function ReadilyProfessional() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as 'upload' | 'analysis' | 'results')}
                   className={`flex items-center space-x-2 py-4 text-sm font-medium transition-colors ${
                     activeTab === tab.id
                       ? 'border-b-2 border-blue-600 text-blue-600'

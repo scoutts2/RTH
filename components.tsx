@@ -570,7 +570,7 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
             <div className="flex items-center space-x-2">
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as 'status' | 'confidence' | 'question')}
                 className="rounded-md border border-gray-300 px-3 py-2 text-sm"
               >
                 <option value="status">Sort by Status</option>
