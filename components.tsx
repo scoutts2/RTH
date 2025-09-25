@@ -162,26 +162,6 @@ export function PolicyUpload({ onUploadComplete }: PolicyUploadProps) {
     setIsDragOver(false);
   }, []);
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const files = Array.from(e.dataTransfer.files).filter(
-      file => file.type === 'application/pdf'
-    );
-    
-    if (files.length > 0) {
-      await processFiles(files);
-    }
-  }, []);
-
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files ? Array.from(e.target.files) : [];
-    if (files.length > 0) {
-      await processFiles(files);
-    }
-  }, []);
-
   const processFiles = async (files: File[]) => {
     setUploading(true);
     setUploadProgress(0);
@@ -215,6 +195,26 @@ export function PolicyUpload({ onUploadComplete }: PolicyUploadProps) {
       setUploadProgress(0);
     }
   };
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files).filter(
+      file => file.type === 'application/pdf'
+    );
+    
+    if (files.length > 0) {
+      await processFiles(files);
+    }
+  }, [processFiles]);
+
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (files.length > 0) {
+      await processFiles(files);
+    }
+  }, [processFiles]);
 
   const removeFile = (id: string) => {
     const filtered = uploadedFiles.filter(file => file.id !== id);
@@ -319,26 +319,6 @@ export function QuestionUpload({ onUploadComplete }: QuestionUploadProps) {
     setIsDragOver(false);
   }, []);
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const files = Array.from(e.dataTransfer.files).filter(
-      file => file.type === 'application/pdf'
-    );
-    
-    if (files.length > 0) {
-      await processFile(files[0]);
-    }
-  }, []);
-
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      await processFile(file);
-    }
-  }, []);
-
   const processFile = async (file: File) => {
     setUploading(true);
     setUploadProgress(0);
@@ -371,6 +351,26 @@ export function QuestionUpload({ onUploadComplete }: QuestionUploadProps) {
       setUploading(false);
     }
   };
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files).filter(
+      file => file.type === 'application/pdf'
+    );
+    
+    if (files.length > 0) {
+      await processFile(files[0]);
+    }
+  }, [processFile]);
+
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await processFile(file);
+    }
+  }, [processFile]);
 
   return (
     <div className="space-y-4">
