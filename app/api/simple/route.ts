@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
 // ============================================================================
 // GOOGLE GEMINI SETUP
@@ -34,6 +36,23 @@ async function callGemini(prompt: string) {
 // SIMPLE API HANDLER FOR ALL ENDPOINTS
 // ============================================================================
 
+export async function GET(request: NextRequest) {
+  const url = new URL(request.url);
+  const endpoint = url.searchParams.get('endpoint');
+
+  try {
+    switch (endpoint) {
+      case 'get-policy-folders':
+        return await handleGetPolicyFolders(request);
+      default:
+        return NextResponse.json({ error: 'Unknown GET endpoint' }, { status: 400 });
+    }
+  } catch (error) {
+    console.error('API GET Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   const url = new URL(request.url);
   const endpoint = url.searchParams.get('endpoint');
@@ -46,6 +65,8 @@ export async function POST(request: NextRequest) {
         return await handleQuestionUpload(request);
       case 'analyze':
         return await handleAnalysis(request);
+      case 'get-policy-folders':
+        return await handleGetPolicyFolders(request);
       default:
         return NextResponse.json({ error: 'Unknown endpoint' }, { status: 400 });
     }
@@ -55,16 +76,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
-  return NextResponse.json({
-    message: 'Readily Professional API',
-    endpoints: [
-      'POST ?endpoint=upload-policies - Upload policy PDFs',
-      'POST ?endpoint=upload-questions - Upload questions PDF',
-      'POST ?endpoint=analyze - Analyze policies against questions'
-    ]
-  });
-}
 
 // ============================================================================
 // POLICY UPLOAD HANDLER
@@ -296,4 +307,63 @@ Guidelines:
     results,
     message: `Successfully analyzed ${results.length} questions using Gemini AI`
   });
+}
+
+// ============================================================================
+// POLICY FOLDERS HANDLER
+// ============================================================================
+async function handleGetPolicyFolders(request: NextRequest) {
+  try {
+    const policiesPath = path.join(process.cwd(), 'public', 'policies');
+    
+    // Check if policies directory exists
+    if (!fs.existsSync(policiesPath)) {
+      return NextResponse.json({
+        success: true,
+        folders: [],
+        message: 'No policy folders found'
+      });
+    }
+
+    // Read all directories in the policies folder
+    const folders = fs.readdirSync(policiesPath, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => {
+        const folderPath = path.join(policiesPath, dirent.name);
+        const files = fs.readdirSync(folderPath)
+          .filter(file => file.toLowerCase().endsWith('.pdf'))
+          .map(file => {
+            const filePath = path.join(folderPath, file);
+            const stats = fs.statSync(filePath);
+            return {
+              name: file,
+              path: `/policies/${dirent.name}/${file}`,
+              size: stats.size,
+              lastModified: stats.mtime.toISOString()
+            };
+          });
+
+        return {
+          id: dirent.name,
+          name: dirent.name,
+          pdfCount: files.length,
+          pdfs: files,
+          lastModified: files.length > 0 ? Math.max(...files.map(f => new Date(f.lastModified).getTime())) : 0
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    return NextResponse.json({
+      success: true,
+      folders,
+      message: `Found ${folders.length} policy folders with ${folders.reduce((sum, f) => sum + f.pdfCount, 0)} total PDFs`
+    });
+
+  } catch (error) {
+    console.error('Error reading policy folders:', error);
+    return NextResponse.json(
+      { error: 'Failed to read policy folders' },
+      { status: 500 }
+    );
+  }
 }

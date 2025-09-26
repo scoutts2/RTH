@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Upload, FileText, MessageSquareText, BarChart3, Settings } from "lucide-react";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, PolicyUpload, QuestionUpload, AnalysisResults } from "../components";
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, PolicyUpload, QuestionUpload, AnalysisResults, PolicyFolderBrowser } from "../components";
 
 // Types (simplified from separate file)
 interface PolicyDocument {
@@ -152,15 +152,20 @@ export default function ReadilyProfessional() {
               </p>
             </div>
 
+            {/* Pre-loaded Policy Folders */}
+            <div className="mb-8">
+              <PolicyFolderBrowser />
+            </div>
+
             <div className="grid gap-8 md:grid-cols-2">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <FileText className="h-5 w-5 text-blue-600" />
-                    <span>Policy Documents</span>
+                    <span>Upload Additional Policies</span>
                   </CardTitle>
                   <CardDescription>
-                    Upload PDF files containing your organization&apos;s policies and procedures
+                    Add more policy documents to supplement the pre-loaded folders
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

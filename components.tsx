@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Upload, FileText, MessageSquareText, BarChart3, Settings, CheckCircle, X, AlertCircle, XCircle, ChevronDown, ChevronRight, Download } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { Upload, FileText, MessageSquareText, BarChart3, Settings, CheckCircle, X, AlertCircle, XCircle, ChevronDown, ChevronRight, Download, Folder, Eye, ExternalLink } from "lucide-react";
 
 // ============================================================================
 // TYPES
@@ -13,6 +13,21 @@ interface PolicyDocument {
   content: string;
   pages: number;
   uploadedAt: Date;
+}
+
+interface PolicyPDF {
+  name: string;
+  path: string;
+  size: number;
+  lastModified: string;
+}
+
+interface PolicyFolder {
+  id: string;
+  name: string;
+  pdfCount: number;
+  pdfs: PolicyPDF[];
+  lastModified: number;
 }
 
 interface AuditQuestion {
@@ -133,6 +148,38 @@ export function Progress({ value, className = '' }: ProgressProps) {
         className="h-full bg-blue-600 transition-all duration-300"
         style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
       />
+    </div>
+  );
+}
+
+// ============================================================================
+// MODAL COMPONENT
+// ============================================================================
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}
+
+export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
+      <div className="relative z-10 bg-white rounded-lg shadow-lg max-w-4xl max-h-[90vh] w-full mx-4 flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex-1 overflow-auto p-4">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }
@@ -656,6 +703,148 @@ export function AnalysisResults({ results }: AnalysisResultsProps) {
           ))}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// ============================================================================
+// POLICY FOLDER BROWSER
+// ============================================================================
+
+interface PolicyFolderBrowserProps {
+  onPolicySelect?: (policy: PolicyDocument[]) => void;
+}
+
+export function PolicyFolderBrowser({ onPolicySelect }: PolicyFolderBrowserProps) {
+  const [folders, setFolders] = useState<PolicyFolder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedFolder, setSelectedFolder] = useState<PolicyFolder | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetchPolicyFolders();
+  }, []);
+
+  const fetchPolicyFolders = async () => {
+    try {
+      const response = await fetch('/api/simple?endpoint=get-policy-folders');
+      if (response.ok) {
+        const data = await response.json();
+        setFolders(data.folders || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch policy folders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFolderClick = (folder: PolicyFolder) => {
+    setSelectedFolder(folder);
+    setModalOpen(true);
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const openPDF = (pdf: PolicyPDF) => {
+    window.open(pdf.path, '_blank');
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <div className="p-6 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading policy folders...</p>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Pre-loaded Policy Folders</h3>
+        <p className="text-sm text-gray-600">Click on any folder to browse its policy documents</p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {folders.map((folder) => (
+          <Card
+            key={folder.id}
+            className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-blue-500"
+          >
+            <div className="p-4 text-center" onClick={() => handleFolderClick(folder)}>
+              <Folder className="h-12 w-12 text-blue-600 mx-auto mb-2" />
+              <h4 className="font-medium text-gray-900">{folder.name}</h4>
+              <p className="text-sm text-gray-600">{folder.pdfCount} PDFs</p>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={selectedFolder ? `${selectedFolder.name} Policy Documents` : 'Policy Documents'}
+      >
+        {selectedFolder && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">
+                {selectedFolder.pdfCount} Documents in {selectedFolder.name}
+              </h3>
+            </div>
+
+            <div className="grid gap-3">
+              {selectedFolder.pdfs.map((pdf, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                >
+                  <div className="flex items-center space-x-3 flex-1">
+                    <FileText className="h-5 w-5 text-red-600" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {pdf.name}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {formatFileSize(pdf.size)} • {new Date(pdf.lastModified).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openPDF(pdf)}
+                      className="h-8 px-3"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(pdf.path, '_blank')}
+                      className="h-8 px-3"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Open
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
