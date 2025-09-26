@@ -222,6 +222,18 @@ export function PolicyUpload({ onUploadComplete }: PolicyUploadProps) {
     onUploadComplete(filtered);
   };
 
+  const triggerFileSelect = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = '.pdf';
+    input.onchange = (e) => {
+      const event = e as unknown as React.ChangeEvent<HTMLInputElement>;
+      handleFileSelect(event);
+    };
+    input.click();
+  };
+
   return (
     <div className="space-y-4">
       <Card className={`relative cursor-pointer transition-colors ${
@@ -232,6 +244,7 @@ export function PolicyUpload({ onUploadComplete }: PolicyUploadProps) {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
+          onClick={triggerFileSelect}
         >
           <Upload className={`mx-auto h-12 w-12 ${isDragOver ? 'text-blue-500' : 'text-gray-400'}`} />
           <div className="mt-4">
@@ -242,13 +255,6 @@ export function PolicyUpload({ onUploadComplete }: PolicyUploadProps) {
               or click to browse for PDF files
             </p>
           </div>
-          <input
-            type="file"
-            multiple
-            accept=".pdf"
-            onChange={handleFileSelect}
-            className="absolute inset-0 cursor-pointer opacity-0"
-          />
         </div>
       </Card>
 
@@ -372,6 +378,17 @@ export function QuestionUpload({ onUploadComplete }: QuestionUploadProps) {
     }
   }, [processFile]);
 
+  const triggerFileSelect = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf';
+    input.onchange = (e) => {
+      const event = e as unknown as React.ChangeEvent<HTMLInputElement>;
+      handleFileSelect(event);
+    };
+    input.click();
+  };
+
   return (
     <div className="space-y-4">
       <Card className={`relative cursor-pointer transition-colors ${
@@ -382,6 +399,7 @@ export function QuestionUpload({ onUploadComplete }: QuestionUploadProps) {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
+          onClick={triggerFileSelect}
         >
           <MessageSquareText className={`mx-auto h-12 w-12 ${isDragOver ? 'text-green-500' : 'text-gray-400'}`} />
           <div className="mt-4">
@@ -392,12 +410,6 @@ export function QuestionUpload({ onUploadComplete }: QuestionUploadProps) {
               or click to browse for a PDF file containing audit questions
             </p>
           </div>
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={handleFileSelect}
-            className="absolute inset-0 cursor-pointer opacity-0"
-          />
         </div>
       </Card>
 
